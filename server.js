@@ -23,14 +23,20 @@ var url = require('url');
 var kurento = require('kurento-client');
 var fs    = require('fs');
 var https = require('https');
+var uniqid = require('uniqid');
+
+
+var fileName = 'file://'+__dirname+'/static/records/'+new Date()+uniqid();
 
 var argv = minimist(process.argv.slice(2), {
   default: {
       as_uri: "https://localhost:8443/",
       ws_uri: "ws://localhost:8888/kurento",
-     file_uri: 'file:///tmp/temp.webm'
+     file_uri: fileName,
   }
 });
+
+console.log(fileName)
 
 var options =
 {
