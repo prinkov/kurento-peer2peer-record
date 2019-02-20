@@ -1,20 +1,3 @@
-/*
- * (C) Copyright 2014 Kurento (http://kurento.org/)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 var path = require('path');
 var express = require('express');
 var ws = require('ws');
@@ -26,7 +9,7 @@ var https = require('https');
 var uniqid = require('uniqid');
 
 
-var fileName = 'file://'+__dirname+'/static/records/'+new Date()+uniqid();
+var fileName = 'file://'+__dirname+'/static/records/';
 
 var argv = minimist(process.argv.slice(2), {
   default: {
@@ -46,9 +29,6 @@ var options =
 
 var app = express();
 
-/*
- * Definition of global variables.
- */
 
 var kurentoClient = null;
 var userRegistry = new UserRegistry();
@@ -151,7 +131,7 @@ CallMediaPipeline.prototype.createPipeline = function(callerId, calleeId, ws, ca
 
 
 
-                pipeline.create('WebRtcEndpoint', function(error, calleeWebRtcEndpoint) {
+                createMediaElements(pipeline, ws, function(error, calleeWebRtcEndpoint, recorderEndpoint2) {
                     if (error) {
                         pipeline.release();
                         return callback(error);
@@ -178,7 +158,14 @@ CallMediaPipeline.prototype.createPipeline = function(callerId, calleeId, ws, ca
 				        }
 				    });
 
+                     callerWebRtcEndpoint.connect(recorderEndpoint2, function(error) {
+                        if (error) {
+                            return callback(error);
+                        }
+                    });
+
                     recorderEndpoint.record();
+                    recorderEndpoint2.record();
 
 
                     callerWebRtcEndpoint.connect(calleeWebRtcEndpoint, function(error) {
@@ -476,7 +463,7 @@ function onIceCandidate(sessionId, _candidate) {
 function createMediaElements(pipeline, ws, callback) {
 
 
-pipeline.create('RecorderEndpoint', {uri: argv.file_uri}, function(error, recorderEndpoint){
+pipeline.create('RecorderEndpoint', {uri: argv.file_uri+new Date()+uniqid()}, function(error, recorderEndpoint){
 // pipeline.create('RecorderEndpoint', {uri: argv.file_uri, mediaProfile:'WEBM_AUDIO_ONLY'}, function(error, recorderEndpoint){
     if(error) {
       console.log("ERROR CREATING PIPELINE ELEMENTS");
@@ -490,44 +477,12 @@ pipeline.create('RecorderEndpoint', {uri: argv.file_uri}, function(error, record
         return callback(error);
       }
 
-        // pipeline.create('PlayerEndpoint', {uri: argv.file_uri}, function(error, playerEndpoint){
-        //
-        //   if(error) {
-        //     console.log("ERROR CREATING PIPELINE ELEMENTS");
-        //     return callback(error);
-        //   }
-
         return callback(null, webRtcEndpoint, recorderEndpoint);
-
-        // });
 
     });
 
 
   });
-
-
-
-    // pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint) {
-    //     if (error) {
-    //         return callback(error);
-    //     }
-    //
-    //     pipeline.create('FaceOverlayFilter', function(error, faceOverlayFilter) {
-    //         if (error) {
-    //             return callback(error);
-    //         }
-    //
-    //         faceOverlayFilter.setOverlayedImage(url.format(asUrl) + 'img/mario-wings.png',
-    //                 -0.35, -1.2, 1.6, 1.6, function(error) {
-    //             if (error) {
-    //                 return callback(error);
-    //             }
-    //
-    //             return callback(null, webRtcEndpoint, faceOverlayFilter);
-    //         });
-    //     });
-    // });
 }
 
 function connectMediaElements(webRtcEndpoint, recorderEndpoint, callback) {
@@ -535,7 +490,6 @@ function connectMediaElements(webRtcEndpoint, recorderEndpoint, callback) {
         if (error) {
             return callback(error);
         }
-
         webRtcEndpoint.connect(webRtcEndpoint, function(error) {
             if (error) {
                 return callback(error);
