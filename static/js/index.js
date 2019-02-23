@@ -178,7 +178,9 @@ function incomingCall(message) {
 		var options = {
 			localVideo : videoInput,
 			remoteVideo : videoOutput,
-			onicecandidate : onIceCandidate
+			onicecandidate : onIceCandidate,
+			mediaConstraints: constraints
+
 		}
 
 		webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options,
@@ -242,10 +244,17 @@ function call() {
 
 	showSpinner(videoInput, videoOutput);
 
+	var constraints = {
+		audio: true,
+		video: false,
+	};
+
 	var options = {
 		localVideo : videoInput,
 		remoteVideo : videoOutput,
-		onicecandidate : onIceCandidate
+		onicecandidate : onIceCandidate,
+		mediaConstraints: constraints
+
 	}
 
 	webRtcPeer = kurentoUtils.WebRtcPeer.WebRtcPeerSendrecv(options, function(
